@@ -4,20 +4,23 @@ Production-style ML monitoring project that tracks model performance, prediction
 
 ## Project Overview
 
-This project simulates how a deployed fraud-risk model can be monitored after production release.  
-It trains a baseline XGBoost classifier, evaluates incoming batch data, detects drift/anomalies, explains feature impact changes using SHAP, logs experiments with MLflow, and presents results in an interactive Streamlit dashboard.
+This project simulates how a deployed fraud-risk model can be monitored after production release.
+
+It trains a baseline XGBoost classifier, evaluates incoming batch data, detects drift and anomalies, explains feature impact changes using SHAP, logs experiments with MLflow, and presents the results in an interactive Streamlit dashboard.
 
 ## Key Features
 
-- Trained baseline fraud-risk classification model using XGBoost
+- Trained a baseline fraud-risk classification model using XGBoost
 - Logged model metrics, parameters, confusion matrix, and artifacts with MLflow
 - Monitored production-style batches for:
   - model performance degradation
   - prediction drift
   - feature distribution drift
-  - missing values and duplicate records
+  - missing values
+  - duplicate records
+- Implemented automated anomaly flags for drift, risk-score movement, and data quality issues
 - Used SHAP to compare baseline and drifted batch behavior
-- Generated structured incident summaries with severity, root-cause hypothesis, impacted features, and retraining recommendations
+- Generated structured incident summaries with severity, root-cause hypothesis, impacted features, model risk, and retraining recommendations
 - Built an interactive Streamlit dashboard for batch-level monitoring and explanation
 
 ## Tech Stack
