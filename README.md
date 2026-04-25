@@ -221,12 +221,3 @@ Each summary includes:
 
 The module has an OpenAI GPT API integration path and fallback logic. This makes the project reproducible without requiring an API key while still showing how GPT-based summaries can be integrated.
 
-## Resume-Relevant Summary
-
-Built a production-style ML monitoring system to track model performance, prediction drift, feature drift, and data quality changes across simulated batches. Configured MLflow experiment tracking, implemented automated anomaly checks, used SHAP to compare baseline and drifted behavior, and built a Streamlit dashboard with incident-summary outputs.
-
-## Notes
-
-This is a portfolio project using synthetic batch data to demonstrate ML monitoring, drift detection, explainability, experiment tracking, and incident-response workflows.
-
-Do not upload `.env`, virtual environments, local MLflow database files, or API keys to GitHub.
