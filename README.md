@@ -1,12 +1,12 @@
 # AI Model Monitoring & Incident Explanation Assistant
 
-Production-style ML monitoring project that tracks model performance, prediction drift, feature drift, data quality issues, SHAP explainability, and incident summaries across simulated production batches.
+Production-style ML monitoring project that tracks model performance, prediction drift, feature drift, data quality issues, SQL validation, SHAP explainability, and incident summaries across simulated production batches.
 
 ## Project Overview
 
 This project simulates how a deployed fraud-risk model can be monitored after production release.
 
-It trains a baseline XGBoost classifier, evaluates incoming batch data, detects drift and anomalies, explains feature impact changes using SHAP, logs experiments with MLflow, and presents the results in an interactive Streamlit dashboard.
+It trains a baseline XGBoost classifier, evaluates incoming batch data, detects drift and anomalies, validates batch-level patterns with SQL/SQLite, explains feature impact changes using SHAP, logs experiments with MLflow, and presents the results in an interactive Streamlit dashboard.
 
 ## Key Features
 
@@ -14,13 +14,15 @@ It trains a baseline XGBoost classifier, evaluates incoming batch data, detects 
 - Logged model metrics, parameters, confusion matrix, and artifacts with MLflow
 - Monitored production-style batches for model performance degradation, prediction drift, feature distribution drift, missing values, and duplicate records
 - Implemented automated anomaly flags for drift, risk-score movement, and data quality issues
+- Loaded baseline and production batch data into SQLite using `src/sqlite_loader.py`
+- Added SQL validation queries in `sql/monitoring_queries.sql` to check batch volume, fraud rate, risk-score movement, data quality, and high-risk transaction counts
 - Used SHAP to compare baseline and drifted batch behavior
 - Generated structured incident summaries with severity, root-cause hypothesis, impacted features, model risk, and retraining recommendations
-- Built an interactive Streamlit dashboard for batch-level monitoring and explanation
+- Built an interactive Streamlit dashboard for batch-level monitoring, SQL validation, explainability, and incident summaries
 
 ## Tech Stack
 
-Python, pandas, scikit-learn, XGBoost, SHAP, MLflow, Streamlit, Plotly, SQLite
+Python, SQL, SQLite, pandas, scikit-learn, XGBoost, SHAP, MLflow, Streamlit, Plotly
 
 ## Project Structure
 
@@ -40,8 +42,11 @@ ai-model-monitoring-incident-assistant/
 │   ├── batch_monitoring_report.csv
 │   ├── shap/
 │   └── incident_summaries/
+├── sql/
+│   └── monitoring_queries.sql
 ├── src/
 │   ├── data_loader.py
+│   ├── sqlite_loader.py
 │   ├── train_model.py
 │   ├── monitoring_checks.py
 │   ├── shap_analysis.py
@@ -85,7 +90,31 @@ Key fields include:
 pip install -r requirements.txt
 ```
 
-### 2. Train baseline model
+### 2. Load data into SQLite and run SQL validation
+
+```bash
+python src/sqlite_loader.py
+```
+
+This creates a local SQLite database and validates batch-level data using SQL queries.
+
+It checks:
+
+- baseline vs production batch row counts
+- batch-level fraud rates
+- average simulated fraud risk
+- transaction amount patterns
+- login velocity movement
+- data quality checks
+- high-risk transaction counts
+
+The SQL queries are also available in:
+
+```text
+sql/monitoring_queries.sql
+```
+
+### 3. Train baseline model
 
 ```bash
 python src/train_model.py
@@ -93,7 +122,7 @@ python src/train_model.py
 
 This trains the baseline XGBoost model and logs metrics, parameters, confusion matrix, and artifacts using MLflow.
 
-### 3. Run batch monitoring checks
+### 4. Run batch monitoring checks
 
 ```bash
 python src/monitoring_checks.py
@@ -105,7 +134,7 @@ This evaluates each production batch and creates:
 outputs/batch_monitoring_report.csv
 ```
 
-### 4. Run SHAP analysis
+### 5. Run SHAP analysis
 
 ```bash
 python src/shap_analysis.py
@@ -113,7 +142,7 @@ python src/shap_analysis.py
 
 This generates baseline vs drifted batch SHAP comparison files and summary plots.
 
-### 5. Generate incident summaries
+### 6. Generate incident summaries
 
 ```bash
 python src/incident_summary.py
@@ -123,11 +152,42 @@ This creates incident summaries for anomalous batches.
 
 The incident-summary module is OpenAI GPT API-ready and also includes fallback logic, so the project can run without exposing or requiring an API key.
 
-### 6. Launch Streamlit dashboard
+### 7. Launch Streamlit dashboard
 
 ```bash
 streamlit run app/streamlit_app.py
 ```
+
+## SQL and SQLite Validation
+
+The project uses SQLite to make SQL validation part of the monitoring workflow.
+
+`src/sqlite_loader.py` loads the baseline and production batch CSV files into a local SQLite table named:
+
+```text
+transactions
+```
+
+The SQL validation layer checks:
+
+- total rows by data source
+- batch-level fraud rate
+- average simulated fraud probability
+- average transaction amount
+- login velocity movement
+- device trust score
+- IP risk score
+- merchant risk score
+- missing values by batch
+- high-risk transaction counts
+
+The SQL query file is included for visibility:
+
+```text
+sql/monitoring_queries.sql
+```
+
+The SQLite database is generated locally and should not be uploaded to GitHub.
 
 ## MLflow Tracking
 
@@ -171,6 +231,7 @@ The project evaluates four simulated production batches:
 
 - The monitoring system correctly identified `batch_01_normal.csv` as a stable batch with no anomaly detected.
 - `batch_02_feature_drift.csv` showed the strongest drift pattern, with `login_velocity_24h` emerging as the most important changed feature in the SHAP comparison.
+- SQL validation showed higher high-risk transaction concentration in drifted and quality-issue batches.
 - The average predicted risk increased in drifted batches compared with the baseline, indicating prediction behavior changed after batch-level distribution shifts.
 - `batch_03_prediction_drift.csv` was flagged due to risk-score movement and feature drift, showing how prediction drift can appear even when data quality is not the main issue.
 - `batch_04_quality_issue.csv` was flagged because monitoring checks detected data quality issues along with drift signals.
@@ -201,6 +262,8 @@ The Streamlit dashboard includes:
 - anomaly status
 - prediction risk comparison
 - feature drift charts
+- SQL validation summary
+- high-risk transaction count chart
 - model performance trend charts
 - SHAP impact comparison
 - SHAP summary plots
